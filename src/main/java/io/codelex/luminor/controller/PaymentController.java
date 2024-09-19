@@ -2,9 +2,9 @@ package io.codelex.luminor.controller;
 
 import io.codelex.luminor.model.Payment;
 import io.codelex.luminor.service.PaymentService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.util.Optional;
 
@@ -25,11 +25,11 @@ public class PaymentController {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be bigger than zero");
         }
-        if (!paymentService.isValidIban(debtorIban)) {
+        if (StringUtils.isBlank(debtorIban) || !paymentService.isValidIban(debtorIban)) {
             throw new IllegalArgumentException("Invalid IBAN");
         }
 
-        String ipAddress = (xForwardedFor != null && !xForwardedFor.isEmpty()) ? xForwardedFor : "";
+        String ipAddress = StringUtils.isEmpty(xForwardedFor) ? "" : xForwardedFor;
         return paymentService.createPayment(amount, debtorIban, ipAddress);
     }
 
@@ -41,7 +41,6 @@ public class PaymentController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public Iterable<Payment> getPayments(@RequestParam Optional<String> debtorIban) {
         return paymentService.getPayments(debtorIban);
     }
